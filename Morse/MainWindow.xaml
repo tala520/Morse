@@ -5,8 +5,54 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morse"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
-    <Grid>
+        Title="Morse" Height="500" Width="525">
+    <Window.Resources>
+        <local:ViewModel x:Key="vm"/>
+    </Window.Resources>
+    <Grid DataContext="{Binding Source={StaticResource vm}}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="70"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
         
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+
+    
+    <Label Grid.Row="0" Grid.Column="0" 
+           Content="Mode:" 
+           HorizontalAlignment="Right" 
+           Margin="1,1,1,1" 
+           VerticalAlignment="Center"/>
+    
+    <ComboBox Grid.Row="0" Grid.Column="1"
+              HorizontalAlignment="Left"
+              Margin="1,1,1,1"
+              VerticalAlignment="Center"
+              SelectedItem="{Binding Path=m.SelectedModeItem,Mode=TwoWay}"
+              ItemsSource="{Binding Path=m.ModeItems,Mode=TwoWay}"/>
+    
+    <Button Grid.Row="0" Grid.Column="3"
+            HorizontalAlignment="Left"
+            Margin="1,1,1,1"
+            VerticalAlignment="Center"
+            Content="Run" Command="{Binding RunCommand}"/>
+    
+    <Label Grid.Row="0" Grid.Column="4"
+           HorizontalAlignment="Left"
+           Margin="1,1,1,1"
+           VerticalAlignment="Center"
+           Content="StandBy"/>
+    
+    <Canvas Grid.Row="1" Grid.ColumnSpan="4">
+        <Ellipse Fill="{Binding Path=m.Color1,Mode=TwoWay}" Canvas.Left="25" Canvas.Top="25" Width="200" Height="200" />
+        <Ellipse Fill="{Binding Path=m.Color2,Mode=TwoWay}" Canvas.Left="250" Canvas.Top="25" Width="200" Height="200" />
+    </Canvas>
+    
     </Grid>
 </Window>
