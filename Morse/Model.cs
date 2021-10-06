@@ -1,62 +1,116 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
-using System.Windows.Media;
 
 namespace Morse
 {
-    public class Model : INotifyPropertyChanged
+    public sealed class Model : INotifyPropertyChanged
     {
+        private string _selectedModeItem;
+        private ObservableCollection<string> _modeItems;
+        private string _selectedFilePath;
+        private string _status;
+        private byte _syncBlock;
+        private ObservableCollection<byte> _dataBlocks;
+        private int _progress;
 
-        private string selectedModeItem;
-        private ObservableCollection<string> modeItems;
-        private string color1;
-        private string color2;
-        
+
+        public Model()
+        {
+            ModeItems = new ObservableCollection<string>
+            {
+                Constants.Sed,
+                Constants.Rev
+            };
+            SelectedModeItem =  Constants.Rev;
+            _dataBlocks = new ObservableCollection<byte>();
+            for (var i = 0; i < Constants.DataRowCount; i++)
+            {
+                for (var j = 0; j < Constants.DataColCount; j++)
+                {
+                    _dataBlocks.Add(Constants.Eof);
+                }
+            }
+        }
+
         public string SelectedModeItem
         {
-            get { return selectedModeItem; }
+            get => _selectedModeItem;
             set
             {
-                this.selectedModeItem = value;
-                OnPropertyChanged("SelectedModeItem");
+                _selectedModeItem = value;
+                OnPropertyChanged();
             }
         }
 
         public ObservableCollection<string> ModeItems
         {
-            get { return modeItems; }
+            get => _modeItems;
             set
             {
-                this.modeItems = value;
-                OnPropertyChanged("PluginItems");
+                _modeItems = value;
+                OnPropertyChanged();
             }
         }
 
-        public string Color1
+        public string SelectedFilePath
         {
-            get { return color1; }
+            get => _selectedFilePath;
             set
             {
-                this.color1 = value;
-                OnPropertyChanged("Color1");
+                _selectedFilePath = value;
+                OnPropertyChanged();
             }
         }
-        
-        public string Color2
+
+        public string Status
         {
-            get { return color2; }
+            get => _status;
             set
             {
-                this.color2 = value;
-                OnPropertyChanged("Color2");
+                _status = value;
+                OnPropertyChanged();
             }
         }
-        
-        
+
+        public byte SyncBlock
+        {
+            get => _syncBlock;
+            set
+            {
+                _syncBlock = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public ObservableCollection<byte> DataBlocks
+        {
+            get => _dataBlocks;
+            set
+            {
+                _dataBlocks = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public void FireDataBlocks()
+        {
+            OnPropertyChanged("DataBlocks");
+        }
+
+        public int Progress
+        {
+            get => _progress;
+            set
+            {
+                _progress = value;
+                OnPropertyChanged();
+            }
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
-        protected virtual void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

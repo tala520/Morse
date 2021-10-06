@@ -5,54 +5,81 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morse"
         mc:Ignorable="d"
-        Title="Morse" Height="500" Width="525">
+        Title="Morse" Height="500" Width="800">
     <Window.Resources>
-        <local:ViewModel x:Key="vm"/>
+        <local:ViewModel x:Key="ViewModel" />
+        <local:ByteToBrushConverter x:Key="ByteToBrushConverter"/>
     </Window.Resources>
-    <Grid DataContext="{Binding Source={StaticResource vm}}">
+    <Grid DataContext="{Binding Source={StaticResource ViewModel}}">
         <Grid.RowDefinitions>
-            <RowDefinition Height="70"/>
-            <RowDefinition/>
+            <RowDefinition Height="70" />
+            <RowDefinition Height="30" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="20" />
         </Grid.RowDefinitions>
-        
+
         <Grid.ColumnDefinitions>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
-            <ColumnDefinition/>
+            <ColumnDefinition Width="90" />
+            <ColumnDefinition Width="90" />
+            <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="70" />
         </Grid.ColumnDefinitions>
 
-    
-    <Label Grid.Row="0" Grid.Column="0" 
-           Content="Mode:" 
-           HorizontalAlignment="Right" 
-           Margin="1,1,1,1" 
-           VerticalAlignment="Center"/>
-    
-    <ComboBox Grid.Row="0" Grid.Column="1"
-              HorizontalAlignment="Left"
-              Margin="1,1,1,1"
-              VerticalAlignment="Center"
-              SelectedItem="{Binding Path=m.SelectedModeItem,Mode=TwoWay}"
-              ItemsSource="{Binding Path=m.ModeItems,Mode=TwoWay}"/>
-    
-    <Button Grid.Row="0" Grid.Column="3"
-            HorizontalAlignment="Left"
-            Margin="1,1,1,1"
-            VerticalAlignment="Center"
-            Content="Run" Command="{Binding RunCommand}"/>
-    
-    <Label Grid.Row="0" Grid.Column="4"
-           HorizontalAlignment="Left"
-           Margin="1,1,1,1"
-           VerticalAlignment="Center"
-           Content="StandBy"/>
-    
-    <Canvas Grid.Row="1" Grid.ColumnSpan="4">
-        <Ellipse Fill="{Binding Path=m.Color1,Mode=TwoWay}" Canvas.Left="25" Canvas.Top="25" Width="200" Height="200" />
-        <Ellipse Fill="{Binding Path=m.Color2,Mode=TwoWay}" Canvas.Left="250" Canvas.Top="25" Width="200" Height="200" />
-    </Canvas>
-    
+
+        <Label Grid.Row="0" Grid.Column="0"
+               Content="Mode:"
+               HorizontalAlignment="Right"
+               Margin="1,1,1,1"
+               VerticalAlignment="Center" />
+
+        <ComboBox Grid.Row="0" Grid.Column="1"
+                  HorizontalAlignment="Left"
+                  Margin="1,1,1,1"
+                  VerticalAlignment="Center"
+                  SelectedItem="{Binding Path=Model.SelectedModeItem,Mode=TwoWay}"
+                  ItemsSource="{Binding Path=Model.ModeItems,Mode=TwoWay}" />
+
+        <TextBox Grid.Row="0" Grid.Column="2"
+                 Margin="1,1,1,1"
+                 HorizontalAlignment="Stretch" VerticalAlignment="Center" 
+                 Text="{Binding Path=Model.SelectedFilePath, Mode=TwoWay}"/>
+
+        <Button Grid.Row="0" Grid.Column="3"
+                Margin="1,1,1,1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="50"
+                Content="Browse" Command="{Binding BrowseCommand}" />
+
+        <Label Grid.Row="1" Grid.Column="0"
+               Content="Sync Block:"
+               HorizontalAlignment="Right"
+               Margin="1,1,10,1"
+               VerticalAlignment="Center" />
+
+        <Rectangle Grid.Row="1" Grid.Column="1"
+                   Fill="{Binding Path=Model.SyncBlock, Mode=OneWay, Converter={StaticResource ByteToBrushConverter}}" />
+
+        <Label Grid.Row="1" Grid.Column="2"
+               HorizontalAlignment="Left"
+               Margin="1,1,1,1"
+               VerticalAlignment="Center"
+               Content="{Binding Path=Model.Status, Mode=TwoWay}" />
+
+        <Button Grid.Row="1" Grid.Column="3"
+                Margin="1,1,1,1"
+                HorizontalAlignment="Center"
+                VerticalAlignment="Center"
+                Width="50"
+                Content="Run" Command="{Binding RunCommand}" />
+
+
+        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4" 
+              HorizontalAlignment="Stretch"
+              VerticalAlignment="Stretch"
+              Margin="10,10,10,10"
+              x:Name="DataGrid"/>
+
+        <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4" Value="{Binding Path=Model.Progress, Mode=OneWay}" />
     </Grid>
 </Window>

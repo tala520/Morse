@@ -39,6 +39,7 @@
         <Reference Include="System.Core" />
         <Reference Include="System.Data" />
         <Reference Include="System.Drawing" />
+        <Reference Include="System.Windows.Forms" />
         <Reference Include="System.Xml" />
         <Reference Include="System.Xaml">
             <RequiredTargetFramework>4.0</RequiredTargetFramework>
@@ -52,7 +53,12 @@
             <Generator>MSBuild:Compile</Generator>
             <SubType>Designer</SubType>
         </ApplicationDefinition>
-        <Compile Include="ButtonCommand.cs" />
+        <Compile Include="BlockColors.cs" />
+        <Compile Include="BrowseCommand.cs" />
+        <Compile Include="ByteToBrushConverter.cs" />
+        <Compile Include="Constants.cs" />
+        <Compile Include="Hook.cs" />
+        <Compile Include="RunCommand.cs" />
         <Compile Include="ViewModel.cs" />
         <Page Include="MainWindow.xaml">
             <Generator>MSBuild:Compile</Generator>

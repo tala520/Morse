@@ -3,25 +3,25 @@ using System.Windows.Input;
 
 namespace Morse
 {
-    public class ButtonCommand : ICommand
+    public class RunCommand : ICommand
     {
-        private ViewModel vm;
+        private readonly ViewModel _vm;
 
-        public ButtonCommand(ViewModel vm)
+        public RunCommand(ViewModel vm)
         {
-            this.vm = vm;
+            _vm = vm;
         }
 
         public bool CanExecute(object parameter)
         {
-            return true;
+            return _vm.CanRun();
         }
         
         public event EventHandler CanExecuteChanged;
 
         public void Execute(object parameter)
         {
-            vm.Run();
+            _vm.Run();
         }
     }
 }
