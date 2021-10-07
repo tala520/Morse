@@ -126,9 +126,9 @@ namespace Morse
         
         public Point SyncBlockRightLocation { get; set; }
 
-        public Point SyncBlockCenterPoint =>
-            new Point(SyncBlockLeftLocation.X+(SyncBlockRightLocation.X - SyncBlockLeftLocation.X) / 2,
-                SyncBlockLeftLocation.Y+(SyncBlockRightLocation.Y - SyncBlockLeftLocation.Y) / 2);
+        public Point SyncBlockAutoClickPoint =>
+            new Point(SyncBlockRightLocation.X-(SyncBlockRightLocation.X - SyncBlockLeftLocation.X) / 4,
+                SyncBlockRightLocation.Y-(SyncBlockRightLocation.Y - SyncBlockLeftLocation.Y) / 4);
 
         public int SyncBlockClickedCount { get; set; }
         public Point DataBlockLeftLocation { get; set; }

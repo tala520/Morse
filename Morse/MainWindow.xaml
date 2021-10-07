@@ -58,6 +58,7 @@
                VerticalAlignment="Center" />
 
         <Rectangle Grid.Row="1" Grid.Column="1"
+                   Cursor="Cross"
                    Fill="{Binding Path=Model.SyncByte, Mode=OneWay, Converter={StaticResource ByteToBrushConverter}}" >
             <Rectangle.InputBindings>
                 <MouseBinding Gesture="LeftClick" Command="{Binding ClickCommand}"></MouseBinding>
@@ -83,7 +84,7 @@
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch"
               Margin="10,10,10,10"
-              x:Name="DataGrid" />
+              x:Name="DataGrid" Cursor="Cross" />
 
         <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4"
                      Value="{Binding Path=Model.Progress, Mode=OneWay}" />

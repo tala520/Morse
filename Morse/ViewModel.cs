@@ -209,7 +209,7 @@ namespace Morse
                             Model.FireDataBlocks();
                             receivedFrames++;
                             Model.Status = $"Have Received {receivedFrames} Frames";
-                            
+
                             byte[] cache = new byte[Configs.DataBlockByteSize];
                             int n = 0;
                             for (var i = 0; i < captureDataBytes.Length; i++)
@@ -231,10 +231,10 @@ namespace Morse
                                 Model.Status = "Finished";
                                 break;
                             }
-                            
+
                             if (Configs.AutoClickCycle > 0 && receivedFrames % Configs.AutoClickCycle == 0)
                             {
-                                UserActivityHook.DoMouseClick(Model.SyncBlockCenterPoint);
+                                UserActivityHook.DoMouseClick(Model.SyncBlockAutoClickPoint);
                             }
                         }
                     }
