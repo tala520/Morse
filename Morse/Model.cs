@@ -1,6 +1,8 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Drawing;
 using System.Runtime.CompilerServices;
+using Rectangle = System.Windows.Shapes.Rectangle;
 
 namespace Morse
 {
@@ -10,8 +12,9 @@ namespace Morse
         private ObservableCollection<string> _modeItems;
         private string _selectedFilePath;
         private string _status;
-        private byte _syncBlock;
-        private ObservableCollection<byte> _dataBlocks;
+        private string _mouse;
+        private byte _syncByte;
+        private ObservableCollection<byte?> _dataBytes;
         private int _progress;
 
 
@@ -22,13 +25,13 @@ namespace Morse
                 Constants.Sed,
                 Constants.Rev
             };
-            SelectedModeItem =  Constants.Rev;
-            _dataBlocks = new ObservableCollection<byte>();
+            SelectedModeItem = Constants.Rev;
+            _dataBytes = new ObservableCollection<byte?>();
             for (var i = 0; i < Constants.DataRowCount; i++)
             {
                 for (var j = 0; j < Constants.DataColCount; j++)
                 {
-                    _dataBlocks.Add(Constants.Eof);
+                    _dataBytes.Add(0);
                 }
             }
         }
@@ -72,30 +75,40 @@ namespace Morse
                 OnPropertyChanged();
             }
         }
-
-        public byte SyncBlock
+        
+        public string Mouse
         {
-            get => _syncBlock;
+            get => _mouse;
             set
             {
-                _syncBlock = value;
+                _mouse = value;
+                OnPropertyChanged();
+            }
+        }
+        
+        public byte SyncByte
+        {
+            get => _syncByte;
+            set
+            {
+                _syncByte = value;
                 OnPropertyChanged();
             }
         }
 
-        public ObservableCollection<byte> DataBlocks
+        public ObservableCollection<byte?> DataBytes
         {
-            get => _dataBlocks;
+            get => _dataBytes;
             set
             {
-                _dataBlocks = value;
+                _dataBytes = value;
                 OnPropertyChanged();
             }
         }
 
         public void FireDataBlocks()
         {
-            OnPropertyChanged("DataBlocks");
+            OnPropertyChanged("DataBytes");
         }
 
         public int Progress
@@ -107,6 +120,14 @@ namespace Morse
                 OnPropertyChanged();
             }
         }
+
+        public Point SyncBlockLeftLocation { get; set; }
+        
+        public Point SyncBlockRightLocation { get; set; }
+        
+        public Point DataBlockLeftLocation { get; set; }
+        
+        public Point DataBlockRightLocation { get; set; }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

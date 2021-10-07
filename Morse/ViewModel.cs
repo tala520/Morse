@@ -1,10 +1,15 @@
+using System;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
 using MessageBox = System.Windows.Forms.MessageBox;
-using OpenFileDialog = Microsoft.Win32.OpenFileDialog;
+using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
+using MouseEventHandler = System.Windows.Forms.MouseEventHandler;
+
 
 namespace Morse
 {
@@ -29,11 +34,17 @@ namespace Morse
 
         public void BrowseFile()
         {
-            OpenFileDialog dlg = new OpenFileDialog
+            FileDialog dlg;
+            if (Model.SelectedModeItem.Equals(Constants.Sed))
             {
-                Multiselect = false
-            };
-            if (dlg.ShowDialog() == true)
+                dlg = new OpenFileDialog {Multiselect = false};
+            }
+            else
+            {
+                dlg = new SaveFileDialog();
+            }
+
+            if (dlg.ShowDialog() == DialogResult.OK)
             {
                 Model.SelectedFilePath = dlg.FileName;
             }
@@ -48,17 +59,22 @@ namespace Morse
 
         private void Reset()
         {
-            Model.SyncBlock = 0;
+            Model.SyncByte = 0;
 
-            for (var i = 0; i < Model.DataBlocks.Count; i++)
+            for (var i = 0; i < Model.DataBytes.Count; i++)
             {
-                Model.DataBlocks[i] = Constants.Eof;
+                Model.DataBytes[i] = 0;
             }
 
             Model.FireDataBlocks();
 
             Model.Status = string.Empty;
             Model.Progress = 0;
+
+            Model.SyncBlockLeftLocation = Point.Empty;
+            Model.SyncBlockRightLocation = Point.Empty;
+            Model.DataBlockLeftLocation = Point.Empty;
+            Model.DataBlockRightLocation = Point.Empty;
         }
 
         public void Run()
@@ -90,18 +106,16 @@ namespace Morse
                             byteRead += n;
                             byteToRead -= n;
 
-                            for (int i = 0; i < n; i++)
+                            for (var i = 0; i < n; i++)
                             {
-                                Model.DataBlocks[2 * i] = (byte) ((cache[i] >> 4) & 0x0F);
-                                Model.DataBlocks[2 * i + 1] = (byte) (cache[i] & 0x0F);
+                                Model.DataBytes[i] = cache[i];
                             }
 
                             if (n < cache.Length)
                             {
-                                for (int i = n; i < cache.Length; i++)
+                                for (var i = n; i < cache.Length; i++)
                                 {
-                                    Model.DataBlocks[2 * i] = Constants.Eof;
-                                    Model.DataBlocks[2 * i + 1] = Constants.Eof;
+                                    Model.DataBytes[i] = null;
                                 }
                             }
 
@@ -116,37 +130,122 @@ namespace Morse
             else
             {
                 Model.Status = "Please select the sync block";
+                UserActivityHook hook = new UserActivityHook();
+                hook.OnMouseActivity += (sender, e) =>
+                {
+                    Model.Mouse = $"Location: [{e.Location.X},{e.Location.Y}]";
+
+                    if (e.Button != MouseButtons.Left)
+                    {
+                        return;
+                    }
+
+                    if (e.Clicks == 1)
+                    {
+                        if (Model.SyncBlockLeftLocation == Point.Empty)
+                        {
+                            Model.SyncBlockLeftLocation = e.Location;
+                        }
+                        else if (Model.DataBlockLeftLocation == Point.Empty)
+                        {
+                            Model.DataBlockLeftLocation = e.Location;
+                        }
+                    }
+                    else if (e.Clicks == 2)
+                    {
+                        if (Model.SyncBlockRightLocation == Point.Empty)
+                        {
+                            Model.SyncBlockRightLocation = e.Location;
+                        }
+                        else if (Model.DataBlockRightLocation == Point.Empty)
+                        {
+                            Model.DataBlockRightLocation = e.Location;
+                        }
+                    }
+                };
                 Task.Run(() =>
                 {
-                    while (true)
+                    byte lastSyncByte = 0;
+                    bool isFinish = false;
+                    using (FileStream fs = new FileStream(Model.SelectedFilePath, FileMode.Create, FileAccess.Write))
                     {
-                        Model.Status = Hook.GetCursorPosition().X + ":" + Hook.GetCursorPosition().Y;
+                        while (true)
+                        {
+                            if (Model.SyncBlockLeftLocation == Point.Empty ||
+                                Model.SyncBlockRightLocation == Point.Empty)
+                            {
+                                Thread.Sleep(500);
+                                continue;
+                            }
+
+
+                            if (Model.DataBlockLeftLocation == Point.Empty ||
+                                Model.DataBlockRightLocation == Point.Empty)
+                            {
+                                Model.Status = "Please select the data block";
+                                Thread.Sleep(500);
+                                continue;
+                            }
+
+                            hook.Stop();
+                            Model.Status = "Please click the run button in Virtual Window";
+                            var captureSyncByte = CaptureSyncByte().Value;
+                            if (captureSyncByte == lastSyncByte)
+                            {
+                                continue;
+                            }
+
+                            var expectedSyncDByte = GetNextSyncByte(lastSyncByte);
+                            if (expectedSyncDByte != captureSyncByte)
+                            {
+                                Model.Status = "Error! Missed some frames, please try again.";
+                                break;
+                            }
+
+                            lastSyncByte = captureSyncByte;
+                            Model.SyncByte = captureSyncByte;
+                            Thread.Sleep(50);
+                            var captureDataBytes = CaptureDataBytes();
+                            for (int i = 0; i < captureDataBytes.Length; i++)
+                            {
+                                Model.DataBytes[i] = captureDataBytes[i];
+                            }
+
+                            Model.FireDataBlocks();
+
+                            byte[] cache = new byte[Constants.DataBlockByteSize];
+                            int n = 0;
+                            for (var i = 0; i < captureDataBytes.Length; i++)
+                            {
+                                var data = captureDataBytes[i];
+                                if (data == null)
+                                {
+                                    isFinish = true;
+                                    break;
+                                }
+
+                                cache[n++] = data.Value;
+                            }
+                            fs.Write(cache,0,n);
+                            if (isFinish)
+                            {
+                                fs.Flush();
+                                Model.Status = "Finished";
+                                break;
+                            }
+                        }
                     }
                 });
-
-                //Creating a new Bitmap object
-                // Rectangle captureRectangle = new Rectangle();
-                // captureRectangle.X = 40;
-                // captureRectangle.X = 320;
-                // captureRectangle.Y = 200;
-                // captureRectangle.Height = 300;
-                // captureRectangle.Width = 260;
-                // Bitmap captureBitmap = new Bitmap(captureRectangle.Width, captureRectangle.Height);
-                // Graphics captureGraphics = Graphics.FromImage(captureBitmap);
-                // captureGraphics.CopyFromScreen(captureRectangle.Left,captureRectangle.Top,0,0,captureRectangle.Size);
-                // captureBitmap.Save(@"C:\Users\user\Capture.jpg",ImageFormat.Jpeg);
-                //
-                // Color color = captureBitmap.GetPixel(captureRectangle.Height / 2, captureRectangle.Width / 2);
-                // MessageBox.Show(color.ToString());
             }
         }
 
+
         private void SetSyncBlock()
         {
-            Model.SyncBlock = GetNextSync(Model.SyncBlock);
+            Model.SyncByte = GetNextSyncByte(Model.SyncByte);
         }
 
-        private byte GetNextSync(byte currSync)
+        private byte GetNextSyncByte(byte currSync)
         {
             if (currSync == 0)
             {
@@ -164,6 +263,47 @@ namespace Morse
             }
 
             return 0;
+        }
+
+        private byte? CaptureSyncByte()
+        {
+            var captureBitmap = CaptureBitMap(Model.SyncBlockLeftLocation, Model.SyncBlockRightLocation);
+            Color color = captureBitmap.GetPixel(captureBitmap.Width / 2, captureBitmap.Height / 2);
+            return BlockColors.Covert(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+        }
+
+        private byte?[] CaptureDataBytes()
+        {
+            var captureBitmap = CaptureBitMap(Model.DataBlockLeftLocation, Model.DataBlockRightLocation);
+            var cellWidth = (float)captureBitmap.Width / Constants.DataColCount;
+            var cellHeight = (float)captureBitmap.Height / Constants.DataRowCount;
+            var firstCellX = cellWidth / 2;
+            var firstCellY = cellHeight / 2;
+            byte?[] result = new byte?[Constants.DataBlockByteSize];
+            int n = 0;
+            for (int i = 0; i < Constants.DataRowCount; i++)
+            {
+                for (int j = 0; j < Constants.DataColCount; j++)
+                {
+                    Color color = captureBitmap.GetPixel((int)(firstCellX+j*cellWidth), (int)(firstCellY+i*cellHeight));
+                    byte? data= BlockColors.Covert(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+                    result[n++] = data;
+                }
+            }
+            
+            return result;
+        }
+
+        private Bitmap CaptureBitMap(Point left, Point right)
+        {
+            Size size = new Size(right.X - left.X, right.Y - left.Y);
+            Rectangle captureRectangle = new Rectangle(left, size);
+
+            Bitmap captureBitmap = new Bitmap(captureRectangle.Width, captureRectangle.Height);
+            Graphics captureGraphics = Graphics.FromImage(captureBitmap);
+            captureGraphics.CopyFromScreen(captureRectangle.Left, captureRectangle.Top, 0, 0, captureRectangle.Size);
+            captureBitmap.Save(@"C:\Users\user\Capture.jpg",ImageFormat.Jpeg);
+            return captureBitmap;
         }
     }
 }

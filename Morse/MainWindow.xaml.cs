@@ -1,6 +1,8 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
+using System.Windows.Media;
 using System.Windows.Shapes;
 
 namespace Morse
@@ -41,7 +43,7 @@ namespace Morse
                     Binding binding = new Binding
                     {
                         Source = Resources["ViewModel"],
-                        Path = new PropertyPath("Model.DataBlocks"),
+                        Path = new PropertyPath("Model.DataBytes"),
                         Mode = BindingMode.OneWay,
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Converter = new ByteToBrushConverter(),
