@@ -37,7 +37,7 @@ namespace Morse
             {
                 if (_dataRowCount < 0)
                 {
-                    _dataRowCount = int.Parse(ReadRegValue(DataRowRegName, "16"));
+                    _dataRowCount = int.Parse(ReadRegValue(DataRowRegName, "32"));
                 }
 
                 return _dataRowCount;
@@ -50,7 +50,7 @@ namespace Morse
             {
                 if (_dataColCount < 0)
                 {
-                    _dataColCount = int.Parse(ReadRegValue(DataColRegName, "32"));
+                    _dataColCount = int.Parse(ReadRegValue(DataColRegName, "64"));
                 }
 
                 return _dataColCount;
