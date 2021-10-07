@@ -1,15 +1,10 @@
 using System;
 using System.Drawing;
-using System.Drawing.Imaging;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Input;
-using MessageBox = System.Windows.Forms.MessageBox;
-using MouseEventArgs = System.Windows.Forms.MouseEventArgs;
-using MouseEventHandler = System.Windows.Forms.MouseEventHandler;
-
 
 namespace Morse
 {
@@ -18,12 +13,14 @@ namespace Morse
         public Model Model { get; }
         public ICommand RunCommand { get; }
         public ICommand BrowseCommand { get; }
+        public ICommand ClickCommand { get; }
 
         public ViewModel()
         {
             Model = new Model();
             RunCommand = new RunCommand(this);
             BrowseCommand = new BrowseCommand(this);
+            ClickCommand = new ClickCommand(this);
         }
 
 
@@ -35,7 +32,7 @@ namespace Morse
         public void BrowseFile()
         {
             FileDialog dlg;
-            if (Model.SelectedModeItem.Equals(Constants.Sed))
+            if (Model.SelectedModeItem.Equals(Configs.Sed))
             {
                 dlg = new OpenFileDialog {Multiselect = false};
             }
@@ -85,23 +82,19 @@ namespace Morse
                 return;
             }
 
-            if (Model.SelectedModeItem.Equals(Constants.Sed))
+            if (Model.SelectedModeItem.Equals(Configs.Sed))
             {
                 Task.Run(() =>
                 {
                     using (FileStream fs = new FileStream(Model.SelectedFilePath, FileMode.Open, FileAccess.Read))
                     {
-                        byte[] cache = new byte[Constants.DataBlockByteSize];
+                        byte[] cache = new byte[Configs.DataBlockByteSize];
                         long totalBytes = fs.Length;
                         long byteToRead = totalBytes;
                         long byteRead = 0;
                         while (byteToRead > 0)
                         {
-                            var n = fs.Read(cache, 0, Constants.DataBlockByteSize);
-                            if (n == 0)
-                            {
-                                break;
-                            }
+                            var n = fs.Read(cache, 0, Configs.DataBlockByteSize);
 
                             byteRead += n;
                             byteToRead -= n;
@@ -119,11 +112,10 @@ namespace Morse
                                 }
                             }
 
-                           
                             Model.FireDataBlocks();
                             SetSyncBlock();
                             Model.Progress = (int) ((float) byteRead / totalBytes * 100);
-                            Thread.Sleep(1000 / Constants.FrameRate);
+                            Thread.Sleep(Configs.SendInterval);
                         }
                     }
                 });
@@ -168,6 +160,7 @@ namespace Morse
                 {
                     byte lastSyncByte = 0;
                     bool isFinish = false;
+                    int receivedFrames = 0;
                     using (FileStream fs = new FileStream(Model.SelectedFilePath, FileMode.Create, FileAccess.Write))
                     {
                         while (true)
@@ -189,7 +182,8 @@ namespace Morse
                             }
 
                             hook.Stop();
-                            Model.Status = "Please click the run button in Virtual Window";
+                            if (receivedFrames == 0) Model.Status = "Please click the run button in Virtual Window";
+
                             var captureSyncByte = CaptureSyncByte().Value;
                             if (captureSyncByte == lastSyncByte)
                             {
@@ -199,13 +193,13 @@ namespace Morse
                             var expectedSyncDByte = GetNextSyncByte(lastSyncByte);
                             if (expectedSyncDByte != captureSyncByte)
                             {
-                                Model.Status = "Error! Missed some frames, please try again.";
+                                Model.Status = Model.Status + " Error! Missed some frames, please try again.";
                                 break;
                             }
 
                             lastSyncByte = captureSyncByte;
                             Model.SyncByte = captureSyncByte;
-                            Thread.Sleep(500);
+                            Thread.Sleep(Configs.ReceiveInterval);
                             var captureDataBytes = CaptureDataBytes();
                             for (int i = 0; i < captureDataBytes.Length; i++)
                             {
@@ -213,8 +207,10 @@ namespace Morse
                             }
 
                             Model.FireDataBlocks();
-
-                            byte[] cache = new byte[Constants.DataBlockByteSize];
+                            receivedFrames++;
+                            Model.Status = $"Have Received {receivedFrames} Frames";
+                            
+                            byte[] cache = new byte[Configs.DataBlockByteSize];
                             int n = 0;
                             for (var i = 0; i < captureDataBytes.Length; i++)
                             {
@@ -227,17 +223,29 @@ namespace Morse
 
                                 cache[n++] = data.Value;
                             }
-                            fs.Write(cache,0,n);
+
+                            fs.Write(cache, 0, n);
                             if (isFinish)
                             {
                                 fs.Flush();
                                 Model.Status = "Finished";
                                 break;
                             }
+                            
+                            if (Configs.AutoClickCycle > 0 && receivedFrames % Configs.AutoClickCycle == 0)
+                            {
+                                UserActivityHook.DoMouseClick(Model.SyncBlockCenterPoint);
+                            }
                         }
                     }
                 });
             }
+        }
+
+        public void SyncBlockClick()
+        {
+            Model.SyncBlockClickedCount++;
+            Model.Status = "Clicked: " + Model.SyncBlockClickedCount + " times";
         }
 
 
@@ -276,22 +284,24 @@ namespace Morse
         private byte?[] CaptureDataBytes()
         {
             var captureBitmap = CaptureBitMap(Model.DataBlockLeftLocation, Model.DataBlockRightLocation);
-            var cellWidth = (float)captureBitmap.Width / Constants.DataColCount;
-            var cellHeight = (float)captureBitmap.Height / Constants.DataRowCount;
+            var cellWidth = (float) captureBitmap.Width / Configs.DataColCount;
+            var cellHeight = (float) captureBitmap.Height / Configs.DataRowCount;
             var firstCellX = cellWidth / 2;
             var firstCellY = cellHeight / 2;
-            byte?[] result = new byte?[Constants.DataBlockByteSize];
+            byte?[] result = new byte?[Configs.DataBlockByteSize];
             int n = 0;
-            for (int i = 0; i < Constants.DataRowCount; i++)
+            for (int i = 0; i < Configs.DataRowCount; i++)
             {
-                for (int j = 0; j < Constants.DataColCount; j++)
+                for (int j = 0; j < Configs.DataColCount; j++)
                 {
-                    Color color = captureBitmap.GetPixel((int)(firstCellX+j*cellWidth), (int)(firstCellY+i*cellHeight));
-                    byte? data= BlockColors.Covert(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
+                    Color color = captureBitmap.GetPixel((int) (firstCellX + j * cellWidth),
+                        (int) (firstCellY + i * cellHeight));
+                    byte? data =
+                        BlockColors.Covert(System.Windows.Media.Color.FromArgb(color.A, color.R, color.G, color.B));
                     result[n++] = data;
                 }
             }
-            
+
             return result;
         }
 

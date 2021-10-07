@@ -21,19 +21,19 @@ namespace Morse
         private void BuildDataGrid()
         {
             DataGrid.ShowGridLines = true;
-            for (var i = 0; i < Constants.DataColCount; i++)
+            for (var i = 0; i < Configs.DataColCount; i++)
             {
                 DataGrid.ColumnDefinitions.Add(new ColumnDefinition());
             }
 
-            for (var i = 0; i < Constants.DataRowCount; i++)
+            for (var i = 0; i < Configs.DataRowCount; i++)
             {
                 DataGrid.RowDefinitions.Add(new RowDefinition());
             }
 
-            for (var i = 0; i < Constants.DataRowCount; i++)
+            for (var i = 0; i < Configs.DataRowCount; i++)
             {
-                for (var j = 0; j < Constants.DataColCount; j++)
+                for (var j = 0; j < Configs.DataColCount; j++)
                 {
                     Rectangle rect = new Rectangle();
                     DataGrid.Children.Add(rect);
@@ -47,7 +47,7 @@ namespace Morse
                         Mode = BindingMode.OneWay,
                         UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
                         Converter = new ByteToBrushConverter(),
-                        ConverterParameter = i * Constants.DataColCount + j
+                        ConverterParameter = i * Configs.DataColCount + j
                     };
                     BindingOperations.SetBinding(rect, Shape.FillProperty, binding);
                 }

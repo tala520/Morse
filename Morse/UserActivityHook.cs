@@ -10,13 +10,14 @@ namespace Morse
     public class UserActivityHook
     {
         #region Windows structure definitions
+
         [StructLayout(LayoutKind.Sequential)]
         private class POINT
         {
             public int x;
             public int y;
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
         private class MouseHookStruct
         {
@@ -25,7 +26,7 @@ namespace Morse
             public int wHitTestCode;
             public int dwExtraInfo;
         }
-        
+
         [StructLayout(LayoutKind.Sequential)]
         private class MouseLLHookStruct
         {
@@ -35,70 +36,81 @@ namespace Morse
             public int time;
             public int dwExtraInfo;
         }
-        
+
         #endregion
 
         #region Windows function imports
-        
+
         [DllImport("user32.dll", CharSet = CharSet.Auto,
-           CallingConvention = CallingConvention.StdCall, SetLastError = true)]
+            CallingConvention = CallingConvention.StdCall, SetLastError = true)]
         private static extern int SetWindowsHookEx(
             int idHook,
             HookProc lpfn,
             IntPtr hMod,
             int dwThreadId);
-        
+
         [DllImport("user32.dll", CharSet = CharSet.Auto,
             CallingConvention = CallingConvention.StdCall, SetLastError = true)]
         private static extern int UnhookWindowsHookEx(int idHook);
 
         [DllImport("user32.dll", CharSet = CharSet.Auto,
-             CallingConvention = CallingConvention.StdCall)]
+            CallingConvention = CallingConvention.StdCall)]
         private static extern int CallNextHookEx(
             int idHook,
             int nCode,
             int wParam,
             IntPtr lParam);
 
+        [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
+        public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint cButtons, uint dwExtraInfo);
+
         private delegate int HookProc(int nCode, int wParam, IntPtr lParam);
-        
 
         #endregion
 
         #region Windows constants
-        
-        private const int WH_MOUSE_LL       = 14;
-        private const int WH_MOUSE          = 7;
-        private const int WM_MOUSEMOVE      = 0x200;
-        private const int WM_LBUTTONDOWN    = 0x201;
-        private const int WM_RBUTTONDOWN    = 0x204;
-        private const int WM_MBUTTONDOWN    = 0x207;
-        private const int WM_LBUTTONUP      = 0x202;
-        private const int WM_RBUTTONUP      = 0x205;
-        private const int WM_MBUTTONUP      = 0x208;
-        private const int WM_LBUTTONDBLCLK  = 0x203;
-        private const int WM_RBUTTONDBLCLK  = 0x206;
-        private const int WM_MBUTTONDBLCLK  = 0x209;
-        private const int WM_MOUSEWHEEL     = 0x020A;
+
+        private const int WH_MOUSE_LL = 14;
+        private const int WH_MOUSE = 7;
+        private const int WM_MOUSEMOVE = 0x200;
+        private const int WM_LBUTTONDOWN = 0x201;
+        private const int WM_RBUTTONDOWN = 0x204;
+        private const int WM_MBUTTONDOWN = 0x207;
+        private const int WM_LBUTTONUP = 0x202;
+        private const int WM_RBUTTONUP = 0x205;
+        private const int WM_MBUTTONUP = 0x208;
+        private const int WM_LBUTTONDBLCLK = 0x203;
+        private const int WM_RBUTTONDBLCLK = 0x206;
+        private const int WM_MBUTTONDBLCLK = 0x209;
+        private const int WM_MOUSEWHEEL = 0x020A;
+
+        private const int MOUSEEVENTF_LEFTDOWN = 0x02;
+        private const int MOUSEEVENTF_LEFTUP = 0x04;
+        private const int MOUSEEVENTF_RIGHTDOWN = 0x08;
+        private const int MOUSEEVENTF_RIGHTUP = 0x10;
+
         #endregion
+
         public UserActivityHook()
         {
             Start();
         }
+
         ~UserActivityHook()
         {
             //uninstall hooks and do not throw exceptions
             Stop(false);
         }
-        
+
         public event MouseEventHandler OnMouseActivity;
         private int hMouseHook = 0;
         private int hKeyboardHook = 0;
         private static HookProc MouseHookProcedure;
+
         public void Start()
         {
             // install Mouse hook only if it is not installed and must be installed
-            if (hMouseHook == 0 )
+            if (hMouseHook == 0)
             {
                 // Create an instance of HookProc.
                 MouseHookProcedure = new HookProc(MouseHookProc);
@@ -121,12 +133,13 @@ namespace Morse
                 }
             }
         }
-        
+
         public void Stop()
         {
             this.Stop(false);
         }
-        public void Stop( bool ThrowExceptions)
+
+        public void Stop(bool ThrowExceptions)
         {
             //if mouse hook set and must be uninstalled
             if (hMouseHook != 0)
@@ -145,14 +158,15 @@ namespace Morse
                 }
             }
         }
-        
+
         private int MouseHookProc(int nCode, int wParam, IntPtr lParam)
         {
             // if ok and someone listens to our events
             if ((nCode >= 0) && (OnMouseActivity != null))
             {
                 //Marshall the data from callback.
-                MouseLLHookStruct mouseHookStruct = (MouseLLHookStruct)Marshal.PtrToStructure(lParam, typeof(MouseLLHookStruct));
+                MouseLLHookStruct mouseHookStruct =
+                    (MouseLLHookStruct) Marshal.PtrToStructure(lParam, typeof(MouseLLHookStruct));
 
                 //detect button clicked
                 MouseButtons button = MouseButtons.None;
@@ -172,7 +186,7 @@ namespace Morse
                         button = MouseButtons.Right;
                         break;
                     case WM_MOUSEWHEEL:
-                        mouseDelta = (short)((mouseHookStruct.mouseData >> 16) & 0xffff);
+                        mouseDelta = (short) ((mouseHookStruct.mouseData >> 16) & 0xffff);
                         break;
                 }
 
@@ -183,17 +197,24 @@ namespace Morse
                     else clickCount = 1;
 
                 //generate event 
-                 MouseEventArgs e = new MouseEventArgs(
-                                                    button,
-                                                    clickCount,
-                                                    mouseHookStruct.pt.x,
-                                                    mouseHookStruct.pt.y,
-                                                    mouseDelta);
+                MouseEventArgs e = new MouseEventArgs(
+                    button,
+                    clickCount,
+                    mouseHookStruct.pt.x,
+                    mouseHookStruct.pt.y,
+                    mouseDelta);
                 //raise it
                 OnMouseActivity(this, e);
             }
+
             //call next hook
             return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+        }
+
+        public static void DoMouseClick(System.Drawing.Point p)
+        {
+            Cursor.Position = p;
+            mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
     }
 }

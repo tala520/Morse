@@ -22,14 +22,14 @@ namespace Morse
         {
             ModeItems = new ObservableCollection<string>
             {
-                Constants.Sed,
-                Constants.Rev
+                Configs.Sed,
+                Configs.Rev
             };
-            SelectedModeItem = Constants.Rev;
+            SelectedModeItem = Configs.GetModeConfig();
             _dataBytes = new ObservableCollection<byte?>();
-            for (var i = 0; i < Constants.DataRowCount; i++)
+            for (var i = 0; i < Configs.DataRowCount; i++)
             {
-                for (var j = 0; j < Constants.DataColCount; j++)
+                for (var j = 0; j < Configs.DataColCount; j++)
                 {
                     _dataBytes.Add(0);
                 }
@@ -42,6 +42,7 @@ namespace Morse
             set
             {
                 _selectedModeItem = value;
+                Configs.SetModeConfig(value);
                 OnPropertyChanged();
             }
         }
@@ -124,10 +125,16 @@ namespace Morse
         public Point SyncBlockLeftLocation { get; set; }
         
         public Point SyncBlockRightLocation { get; set; }
-        
+
+        public Point SyncBlockCenterPoint =>
+            new Point(SyncBlockLeftLocation.X+(SyncBlockRightLocation.X - SyncBlockLeftLocation.X) / 2,
+                SyncBlockLeftLocation.Y+(SyncBlockRightLocation.Y - SyncBlockLeftLocation.Y) / 2);
+
+        public int SyncBlockClickedCount { get; set; }
         public Point DataBlockLeftLocation { get; set; }
         
         public Point DataBlockRightLocation { get; set; }
+        
 
         public event PropertyChangedEventHandler PropertyChanged;
 
