@@ -119,8 +119,9 @@ namespace Morse
                                 }
                             }
 
-                            SetSyncBlock();
+                           
                             Model.FireDataBlocks();
+                            SetSyncBlock();
                             Model.Progress = (int) ((float) byteRead / totalBytes * 100);
                             Thread.Sleep(1000 / Constants.FrameRate);
                         }
@@ -204,7 +205,7 @@ namespace Morse
 
                             lastSyncByte = captureSyncByte;
                             Model.SyncByte = captureSyncByte;
-                            Thread.Sleep(50);
+                            Thread.Sleep(500);
                             var captureDataBytes = CaptureDataBytes();
                             for (int i = 0; i < captureDataBytes.Length; i++)
                             {
@@ -302,7 +303,7 @@ namespace Morse
             Bitmap captureBitmap = new Bitmap(captureRectangle.Width, captureRectangle.Height);
             Graphics captureGraphics = Graphics.FromImage(captureBitmap);
             captureGraphics.CopyFromScreen(captureRectangle.Left, captureRectangle.Top, 0, 0, captureRectangle.Size);
-            captureBitmap.Save(@"C:\Users\user\Capture.jpg",ImageFormat.Jpeg);
+            // captureBitmap.Save(@"C:\Users\user\Capture.jpg",ImageFormat.Jpeg);
             return captureBitmap;
         }
     }
