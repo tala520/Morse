@@ -211,9 +211,8 @@ namespace Morse
             return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
         }
 
-        public static void DoMouseClick(System.Drawing.Point p)
+        public static void DoMouseClick()
         {
-            Cursor.Position = p;
             mouse_event(MOUSEEVENTF_LEFTDOWN | MOUSEEVENTF_LEFTUP, 0, 0, 0, 0);
         }
     }

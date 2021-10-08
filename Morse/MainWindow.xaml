@@ -5,7 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Morse"
         mc:Ignorable="d"
-        Title="Morse" Height="470" Width="800">
+        WindowStartupLocation="Manual"
+        Left="0" Top="0"
+        Title="Morse" Height="700" Width="500">
     <Window.Resources>
         <local:ViewModel x:Key="ViewModel" />
         <local:ByteToBrushConverter x:Key="ByteToBrushConverter" />
@@ -13,7 +15,6 @@
     <Grid DataContext="{Binding Source={StaticResource ViewModel}}">
         <Grid.RowDefinitions>
             <RowDefinition Height="40" />
-            <RowDefinition Height="30" />
             <RowDefinition Height="*" />
             <RowDefinition Height="20" />
         </Grid.RowDefinitions>
@@ -22,6 +23,7 @@
             <ColumnDefinition Width="90" />
             <ColumnDefinition Width="90" />
             <ColumnDefinition Width="*" />
+            <ColumnDefinition Width="70" />
             <ColumnDefinition Width="70" />
         </Grid.ColumnDefinitions>
 
@@ -40,6 +42,7 @@
                   ItemsSource="{Binding Path=Model.ModeItems,Mode=TwoWay}" />
 
         <TextBox Grid.Row="0" Grid.Column="2"
+                 Name="FilePath"
                  Margin="1,1,1,1"
                  HorizontalAlignment="Stretch" VerticalAlignment="Center"
                  Text="{Binding Path=Model.SelectedFilePath, Mode=TwoWay}" />
@@ -49,44 +52,32 @@
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Width="50"
-                Content="Browse" Command="{Binding BrowseCommand}" />
-
-        <Label Grid.Row="1" Grid.Column="0"
-               Content="Sync Block:"
-               HorizontalAlignment="Right"
-               Margin="1,1,10,1"
-               VerticalAlignment="Center" />
-
-        <Rectangle Grid.Row="1" Grid.Column="1"
-                   Cursor="Cross"
-                   Fill="{Binding Path=Model.SyncByte, Mode=OneWay, Converter={StaticResource ByteToBrushConverter}}" >
-            <Rectangle.InputBindings>
-                <MouseBinding Gesture="LeftClick" Command="{Binding ClickCommand}"></MouseBinding>
-            </Rectangle.InputBindings>
-        </Rectangle>
-
-        <Label Grid.Row="1" Grid.Column="2"
-               HorizontalAlignment="Left"
-               Margin="1,1,1,1"
-               VerticalAlignment="Center"
-               Content="{Binding Path=Model.Status, Mode=TwoWay}" />
+                Content="Browse" Command="{Binding BrowseCommand}"/>
 
 
-        <Button Grid.Row="1" Grid.Column="3"
+        <Button Grid.Row="0" Grid.Column="4"
                 Margin="1,1,1,1"
                 HorizontalAlignment="Center"
                 VerticalAlignment="Center"
                 Width="50"
+                IsEnabled="{Binding ElementName=FilePath, Path=Text.Length, Mode=OneWay}"
                 Content="Run" Command="{Binding RunCommand}" />
 
 
-        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="4"
+        <Grid Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="5"
               HorizontalAlignment="Stretch"
               VerticalAlignment="Stretch"
               Margin="10,10,10,10"
-              x:Name="DataGrid" Cursor="Cross" />
+              x:Name="DataGrid" Cursor="Cross">
+            <Grid.InputBindings>
+                <MouseBinding Gesture="LeftClick" Command="{Binding ClickCommand}" />
+            </Grid.InputBindings>
+        </Grid>
 
-        <ProgressBar Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="4"
-                     Value="{Binding Path=Model.Progress, Mode=OneWay}" />
+        <Grid Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="5">
+            <ProgressBar Value="{Binding Path=Model.Progress, Mode=OneWay}" />
+            <TextBlock HorizontalAlignment="Center" VerticalAlignment="Center"
+                       Text="{Binding Path=Model.Status, Mode=OneWay}"/>
+        </Grid>
     </Grid>
 </Window>

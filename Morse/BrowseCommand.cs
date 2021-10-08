@@ -14,7 +14,7 @@ namespace Morse
         
         public bool CanExecute(object parameter)
         {
-            return _vm.CanBrowseFile();
+            return true;
         }
 
         public void Execute(object parameter)

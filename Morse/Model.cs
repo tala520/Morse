@@ -1,3 +1,4 @@
+using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Drawing;
@@ -12,8 +13,6 @@ namespace Morse
         private ObservableCollection<string> _modeItems;
         private string _selectedFilePath;
         private string _status;
-        private string _mouse;
-        private byte _syncByte;
         private ObservableCollection<byte?> _dataBytes;
         private int _progress;
 
@@ -27,13 +26,15 @@ namespace Morse
             };
             SelectedModeItem = Configs.GetModeConfig();
             _dataBytes = new ObservableCollection<byte?>();
-            for (var i = 0; i < Configs.DataRowCount; i++)
+            for (var i = 0; i < Configs.GridRowCount; i++)
             {
-                for (var j = 0; j < Configs.DataColCount; j++)
+                for (var j = 0; j < Configs.GridColCount; j++)
                 {
                     _dataBytes.Add(0);
                 }
             }
+
+            FileData = Array.Empty<byte>();
         }
 
         public string SelectedModeItem
@@ -76,26 +77,7 @@ namespace Morse
                 OnPropertyChanged();
             }
         }
-        
-        public string Mouse
-        {
-            get => _mouse;
-            set
-            {
-                _mouse = value;
-                OnPropertyChanged();
-            }
-        }
-        
-        public byte SyncByte
-        {
-            get => _syncByte;
-            set
-            {
-                _syncByte = value;
-                OnPropertyChanged();
-            }
-        }
+
 
         public ObservableCollection<byte?> DataBytes
         {
@@ -122,19 +104,46 @@ namespace Morse
             }
         }
 
-        public Point SyncBlockLeftLocation { get; set; }
-        
-        public Point SyncBlockRightLocation { get; set; }
+        public byte CurrBlockByte { get; set; }
 
-        public Point SyncBlockAutoClickPoint =>
-            new Point(SyncBlockRightLocation.X-(SyncBlockRightLocation.X - SyncBlockLeftLocation.X) / 4,
-                SyncBlockRightLocation.Y-(SyncBlockRightLocation.Y - SyncBlockLeftLocation.Y) / 4);
+        #region send
 
-        public int SyncBlockClickedCount { get; set; }
+        public byte[] FileData { get; set; }
+        public int TotalFrames { get; set; }
+        public int SentFrames { get; set; }
+        public int SendOffset { get; set; }
+        public DateTime LastConfirmTime { get; set; }
+
+        #endregion
+
+        #region receive
+
         public Point DataBlockLeftLocation { get; set; }
-        
         public Point DataBlockRightLocation { get; set; }
-        
+
+        public Point DataBlockCenterLocation
+        {
+            get
+            {
+                int x = DataBlockLeftLocation.X + (DataBlockRightLocation.X - DataBlockLeftLocation.X) / 2;
+                int y = DataBlockLeftLocation.Y + (DataBlockRightLocation.Y - DataBlockLeftLocation.Y) / 2;
+                return new Point(x, y);
+            }
+        }
+
+        public Point OutOfDataBlockLocation
+        {
+            get
+            {
+                int x = DataBlockLeftLocation.X - 100;
+                int y = DataBlockLeftLocation.Y - 200;
+                return new Point(x, y);
+            }
+        }
+
+        public int ReceivedFrames { get; set; }
+        #endregion
+
 
         public event PropertyChangedEventHandler PropertyChanged;
 

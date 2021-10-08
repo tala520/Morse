@@ -14,7 +14,7 @@ namespace Morse
 
         public bool CanExecute(object parameter)
         {
-            return _vm.CanRun();
+            return true;
         }
         
         public event EventHandler CanExecuteChanged;

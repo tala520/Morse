@@ -19,7 +19,7 @@ namespace Morse
 
         public void Execute(object parameter)
         {
-           _vm.SyncBlockClick();
+           _vm.ReceiveConfirm();
         }
 
         public event EventHandler CanExecuteChanged;

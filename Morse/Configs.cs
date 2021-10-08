@@ -9,18 +9,12 @@ namespace Morse
         public const string Sed = "Sed";
         private const string RegistryPath = "SOFTWARE\\Morse";
         private const string ModeRegName = "LastMode";
-        private const string DataRowRegName = "DataRowCount";
-        private const string DataColRegName = "DataColCount";
-        private const string SendIntervalRegName = "SendInterval";
-        private const string ReceiveIntervalRegName = "ReceiveInterval";
-        private const string AutoClickCycleRegName = "AutoClickCycle";
+        private const string GridRowRegName = "GridRowCount";
+        private const string GridColRegName = "GridColCount";
 
-        private static int _dataRowCount = -1;
-        private static int _dataColCount = -1;
-        private static int _sendInterval = -1;
-        private static int _receiveInterval = -1;
-        private static int _autoClickCycle = -1;
-        
+        private static int _gridRowCount = -1;
+        private static int _gridColCount = -1;
+
         public static string GetModeConfig()
         {
             return ReadRegValue(ModeRegName, Sed);
@@ -31,72 +25,33 @@ namespace Morse
             SetRegValue(ModeRegName, mode);
         }
 
-        public static int DataRowCount
+        public static int GridRowCount
         {
             get
             {
-                if (_dataRowCount < 0)
+                if (_gridRowCount < 0)
                 {
-                    _dataRowCount = int.Parse(ReadRegValue(DataRowRegName, "32"));
+                    _gridRowCount = int.Parse(ReadRegValue(GridRowRegName, "40")); //64
                 }
 
-                return _dataRowCount;
+                return _gridRowCount;
             }
         }
 
-        public static int DataColCount
+        public static int GridColCount
         {
             get
             {
-                if (_dataColCount < 0)
+                if (_gridColCount < 0)
                 {
-                    _dataColCount = int.Parse(ReadRegValue(DataColRegName, "64"));
+                    _gridColCount = int.Parse(ReadRegValue(GridColRegName, "25")); //45
                 }
 
-                return _dataColCount;
-            }
-        }
-        
-        public static int DataBlockByteSize => (DataColCount * DataRowCount);
-        
-        public static int SendInterval
-        {
-            get
-            {
-                if (_sendInterval < 0)
-                {
-                    _sendInterval = int.Parse(ReadRegValue(SendIntervalRegName, "1000"));
-                }
-
-                return _sendInterval;
+                return _gridColCount;
             }
         }
         
-        public static int ReceiveInterval
-        {
-            get
-            {
-                if (_receiveInterval < 0)
-                {
-                    _receiveInterval = int.Parse(ReadRegValue(ReceiveIntervalRegName, "500"));
-                }
-
-                return _receiveInterval;
-            }
-        }
-        
-        public static int AutoClickCycle
-        {
-            get
-            {
-                if (_autoClickCycle < 0)
-                {
-                    _autoClickCycle = int.Parse(ReadRegValue(AutoClickCycleRegName, "10"));
-                }
-
-                return _autoClickCycle;
-            }
-        }
+        public static int BlockCount => (GridColCount * GridRowCount);
 
         private static string ReadRegValue(string valueName, string defaultValue)
         {
